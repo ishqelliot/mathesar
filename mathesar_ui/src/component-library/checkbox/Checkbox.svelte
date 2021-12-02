@@ -18,7 +18,7 @@
   export let disabled = false;
   export let label: string = null;
   export let appearance: 'default' | 'toggle' = 'default';
-  export let id: string = null;
+  export let id: string = undefined;
 
   $: componentId = id || getId();
 

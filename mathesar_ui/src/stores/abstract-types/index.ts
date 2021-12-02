@@ -4,24 +4,19 @@ import { currentDBId } from '@mathesar/stores/databases';
 import { preloadCommonData } from '@mathesar/utils/preloadData';
 
 import type { Readable, Writable, Unsubscriber } from 'svelte/store';
-import type { Database, DbType, AbstractTypeResponse } from '@mathesar/App.d';
+import type { Database, DbType } from '@mathesar/App.d';
 import type { CancellablePromise } from '@mathesar-component-library';
+import type { AbstractType, AbstractTypeResponse } from '@mathesar/stores/abstract-types/types';
+
+import { constructAbstractTypeFromResponse } from './abstractTypeCategories';
 
 const commonData = preloadCommonData();
 
-export interface AbstractType extends Omit<AbstractTypeResponse, 'db_types'> {
-  dbTypes: Set<DbType>,
-  // In the future, this would be base64 or link to svg. Currently it is just a direct string.
-  icon: string,
-  defaultDbType?: DbType,
-}
-
-export const UnknownAbstractType: AbstractType = {
+export const UnknownAbstractType: AbstractType = constructAbstractTypeFromResponse({
   name: 'Unknown',
-  identifier: 'unknown',
-  dbTypes: new Set(),
-  icon: '?',
-};
+  identifier: 'other',
+  db_types: [],
+});
 
 export type AbstractTypesMap = Map<AbstractType['identifier'], AbstractType>;
 
@@ -34,44 +29,11 @@ interface AbstractTypesSubstance {
 const databasesToAbstractTypesStoreMap: Map<Database['id'], Writable<AbstractTypesSubstance>> = new Map();
 const abstractTypesRequestMap: Map<Database['id'], CancellablePromise<AbstractTypeResponse[]>> = new Map();
 
-// TODO: Remove this temporary function once api sends icon related information.
-function getIconForType(typeResponse: AbstractTypeResponse) {
-  switch (typeResponse.identifier) {
-    case 'number':
-      return '#';
-    case 'text':
-      return 'T';
-    default:
-      return '?';
-  }
-}
-
-// TODO: Remove this temporary function once api sends default db type related information.
-function getDefaultDbTypeForType(typeResponse: AbstractTypeResponse) {
-  switch (typeResponse.identifier) {
-    case 'number':
-      return 'NUMERIC';
-    case 'text':
-      return 'VARCHAR';
-    default:
-      return typeResponse.db_types[0];
-  }
-}
-
 function processTypeResponse(abstractTypesResponse: AbstractTypeResponse[]): AbstractTypesMap {
   const abstractTypesMap: AbstractTypesMap = new Map();
-
   abstractTypesResponse.forEach((entry) => {
-    const typeInfo = {
-      ...entry,
-      dbTypes: new Set(entry.db_types),
-      icon: getIconForType(entry),
-      defaultDbType: getDefaultDbTypeForType(entry),
-    };
-    delete typeInfo.db_types;
-    abstractTypesMap.set(typeInfo.identifier, typeInfo);
+    abstractTypesMap.set(entry.identifier, constructAbstractTypeFromResponse(entry));
   });
-
   return abstractTypesMap;
 }
 

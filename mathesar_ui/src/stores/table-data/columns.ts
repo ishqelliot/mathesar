@@ -28,6 +28,7 @@ export interface Column {
   type: DbType,
   index: number,
   nullable: boolean,
+  default: unknown,
   primary_key: boolean,
   valid_target_types: DbType[],
   __columnIndex?: number,
@@ -174,6 +175,17 @@ export class ColumnsDataStore extends EventHandler implements Writable<ColumnsDa
     await this.fetch();
   }
 
+  async patch(
+    column: Column,
+    toUpdate: Partial<Column>,
+  ): Promise<Partial<Column>> {
+    // TODO: Handle default value change for primary key, unique key & auto-incremented columns
+    const columnAfterUpdate = await this.api.update(column.id, toUpdate);
+    await this.fetch();
+    this.dispatch('columnPatched', columnAfterUpdate);
+    return column;
+  }
+
   // TODO: Analyze: Might be cleaner to move following functions as a property of Column class
   // but are the object instantiations worth it?
 
@@ -216,14 +228,14 @@ export class ColumnsDataStore extends EventHandler implements Writable<ColumnsDa
     return allowedTypeConversions;
   }
 
+  async deleteColumn(id: Column['id']): Promise<void> {
+    await this.api.remove(id);
+    await this.fetch();
+  }
+
   destroy(): void {
     this.promise?.cancel();
     this.promise = null;
     super.destroy();
-  }
-
-  async deleteColumn(columnId: Column['id']): Promise<void> {
-    await this.api.remove(columnId);
-    await this.fetch();
   }
 }

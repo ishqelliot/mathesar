@@ -15,7 +15,7 @@
   } from '@mathesar/stores/table-data/types';
 
   import DefaultOptions from './DefaultOptions.svelte';
-  import TypeOptions from './type-options/TypeOptions.svelte';
+  import TypeSwitcher from './type-switcher/TypeSwitcher.svelte';
 
   export let columnPosition: ColumnPosition;
   export let column: Column;
@@ -101,7 +101,7 @@
               on:columnDelete
             />
           {:else if view === 'type'}
-            <TypeOptions {column} {abstractTypeOfColumn} on:close={closeMenu}/>
+            <TypeSwitcher {column} {abstractTypeOfColumn} on:close={closeMenu}/>
           {/if}
         </div>
     </svelte:fragment>

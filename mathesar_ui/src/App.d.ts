@@ -51,7 +51,7 @@ export interface FilterConfiguration {
   }[]
 }
 
-export interface AbstractTypeResponse {
+export interface AbstractTypeResponseOld {
   name: string,
   identifier: string,
   db_types: DbType[],
